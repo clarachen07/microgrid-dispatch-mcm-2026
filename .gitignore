@@ -1,0 +1,23 @@
+.DS_Store
+__MACOSX/
+.venv/
+.pytest_cache/
+__pycache__/
+*.py[cod]
+
+# Generated model runs, exports, reports, and temporary visual checks.
+artifacts/
+tmp/
+archive/
+
+# LaTeX and editor build intermediates.
+*.aux
+*.bbl
+*.blg
+*.fls
+*.fdb_latexmk
+*.log
+*.out
+
+# Local tooling.
+.vscode/

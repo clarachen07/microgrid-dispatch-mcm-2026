@@ -1,0 +1,31 @@
+\begin{table}[H]\centering\small\caption{二月至十二月实际运行汇总}
+\begin{tabular}{lrrrr}\toprule
+策略 & 总费用/万元 & 紧急量/MWh & 期初储电/kWh & 期末储电/kWh\\\midrule
+问题二 & 1463.26 & 81.99 & 9418.37 & 8738.40\\
+问题三 & 1466.21 & 179.94 & 9109.33 & 8563.70\\
+问题四-2 & 1558.41 & 243.83 & 7944.69 & 9258.51\\
+问题四-3 & 1538.52 & 177.01 & 7944.69 & 9258.51\\
+\bottomrule\end{tabular}\end{table}
+\begin{table}[H]\centering\small\caption{储能与预测裕度的费用对照（万元）}
+\begin{tabular}{lrrr}\toprule
+策略 & 无储能 & 简化预测/无裕度 & 本文策略\\\midrule
+问题二 & 1859.39 & 1510.36 & 1463.26\\
+问题三 & 1897.66 & 1624.09 & 1466.21\\
+问题四-2 & 1973.43 & 1869.85 & 1558.41\\
+问题四-3 & 1965.48 & 1719.17 & 1538.52\\
+\bottomrule\end{tabular}\par\footnotesize 各列采用同一行对应的交易规则和实际数据；储电量差异的校正结果见附录。\end{table}
+\begin{table}[H]\centering\small\caption{平均每日节费及其估计区间}
+\begin{tabular}{lrrr}\toprule
+比较 & 平均日节省/元 & 95\%下限 & 95\%上限\\\midrule
+问题二：80\%分位数模型相对12情境模型 & 575.80 & 72.64 & 1087.44\\
+问题三：全部更新相对仅0时 & 1184.76 & 940.95 & 1439.37\\
+问题四：可调整相对不调整 & 595.45 & 204.99 & 1049.18\\
+\bottomrule\end{tabular}\par\footnotesize 正数表示节费，负数表示多花钱；三组区间下限均大于0，支持本年度样本中存在正节费；区间不代表跨年度保证。\end{table}
+\begin{table}[H]\centering\small\caption{每次执行前对当前10分钟的预测误差（正式334日）}
+\begin{tabular}{lrrrr}\toprule
+策略 & 净负荷MAE/kWh & 净负荷RMSE/kWh & 电价MAE & 电价RMSE\\\midrule
+问题二 & 46.2861 & 66.2495 & 0.0000 & 0.0000\\
+问题三 & 47.5674 & 60.7167 & 0.0000 & 0.0000\\
+问题四-2 & 58.4101 & 79.8666 & 0.0501 & 0.0674\\
+问题四-3 & 47.5674 & 60.7167 & 0.0501 & 0.0674\\
+\bottomrule\end{tabular}\par\footnotesize 电价误差单位为元/kWh；问题二记录午夜参考预测，其他策略记录当前区间实现前的控制层首步预测。\end{table}

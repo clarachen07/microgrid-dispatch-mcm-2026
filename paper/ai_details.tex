@@ -1,0 +1,72 @@
+\documentclass[UTF8,a4paper,zihao=-4,fontset=none]{ctexart}
+\usepackage[margin=2.5cm,footskip=1.1cm]{geometry}
+\IfFontExistsTF{Songti SC}{\setCJKmainfont{Songti SC}}{\setCJKmainfont{FandolSong-Regular}}
+\IfFontExistsTF{Heiti SC}{\setCJKsansfont{Heiti SC}\setCJKmonofont{Heiti SC}}{\setCJKsansfont{FandolHei-Regular}\setCJKmonofont{FandolHei-Regular}}
+\IfFontExistsTF{Times New Roman}{\setmainfont{Times New Roman}}{\setmainfont{TeX Gyre Termes}}
+\IfFontExistsTF{Menlo}{\setmonofont[Scale=0.85]{Menlo}}{\setmonofont[Scale=0.85]{Latin Modern Mono}}
+\usepackage{booktabs,longtable,tabularx,array,enumitem,setspace}
+\usepackage[unicode,hidelinks,pdfauthor={},pdftitle={AI工具使用详情}]{hyperref}
+\usepackage{fancyhdr}
+\pagestyle{fancy}\fancyhf{}\fancyfoot[C]{\thepage}\renewcommand{\headrulewidth}{0pt}
+\setstretch{1.1}\setlength{\parindent}{2em}\setlength{\emergencystretch}{3em}
+\ctexset{section={format=\large\bfseries,beforeskip=1ex,afterskip=0.6ex},subsection={format=\normalsize\bfseries,beforeskip=0.8ex,afterskip=0.4ex}}
+\setlist{nosep,leftmargin=2em}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\begin{document}
+\begin{center}{\LARGE\bfseries AI工具使用详情}\end{center}
+\begin{center}对应论文：《基于分位数风险裕度与情景滚动优化的微网购电与储能协同调度》\end{center}
+
+\section{使用的AI工具}
+主要工具为OpenAI Codex GPT-6 Astra、DeepSeek R1。辅助能力包括Python程序生成与检验、原始文献检索、LaTeX代码辅助编写、工作簿核对与PDF页面检查。
+\section{使用目的与涉及环节}
+\begin{longtable}{p{0.18\linewidth}p{0.73\linewidth}}
+\toprule 环节&实际用途及采用方式\\\midrule\endfirsthead
+\toprule 环节&实际用途及采用方式\\\midrule\endhead
+数据核查&检查工作簿维度、日期与时间格式；比对本地PDF、输入数据和结果模板。\\
+文献检索&检索原始学术论文、作者或出版机构资料，核对线性优化、随机规划、模型预测控制和预测评价方法。\\
+程序实现&辅助编写Python数据处理、预测、优化、安全控制、实际账本结算和结果导出程序；通过工具定位程序错误。\\
+数值验证&执行检查，包括能量守恒、库存连续、功率上限、应急购电限制、交易费用、时间因果性与输出一致性。\\
+论文编排&辅助写作数学定义与证明、重写摘要和结果解释、压缩重复论述、编写LaTeX和文献条目，并检查编译页数与页面呈现。\\
+\bottomrule
+\end{longtable}
+
+\section{主要提示思路与使用过程}
+本参赛队在竞赛过程中使用了AI工具，主要用于资料检索、模型讨论、代码辅助、结果核验和论文表述优化，具体使用过程如下。
+
+\begin{enumerate}
+\item \textbf{资料检索：}辅助检索与赛题相关的背景资料和建模方法，为模型设计提供参考。
+\item \textbf{模型讨论：}围绕问题的建模思路、约束条件和求解方法开展讨论，用于完善建模方案。
+\item \textbf{代码辅助：}辅助编写、调试和整理数据处理、模型求解及结果输出程序。
+\item \textbf{结果核验：}辅助检查计算结果、约束满足情况及数据和图表的一致性。
+\item \textbf{论文表述优化：}辅助优化论文的文字表述、结构组织和\LaTeX{}排版。
+\end{enumerate}
+
+AI提供的内容仅作为辅助参考，模型的最终确定、程序运行、结果确认和论文定稿均由参赛队完成。
+
+\section{AI输出的采纳、修改与核验}
+\subsection{已采纳的技术内容}
+交付稿采纳了AI辅助产生的统一符号与单位方案、四问的线性规划和情境规划模型、问题二风险裕度—即时反馈模型、实际储能安全层、Python实现、运行验证、费用拆分、五个工作簿导出、图表和LaTeX排版。对同时充放电净化、5倍紧急价格对应80\%临界分位数、自然结算的上下调边际等数学结论，交付稿提供了公式与适用条件。
+
+AI对已生成草稿的修改包括：区分参考解与实际动作；明确90\%单程效率；将问题一首末相等与全年跨日库存连续区分；将1月候选回测与真实预热状态分开；对官方模板时间歧义、未来价格预测、库存校正和问题三自然结算作明示处理；并在结算口径修正后重跑问题三及问题四-3。本轮又统一题名，重写摘要和四问结果解释，补充结论与模型限制，并加固交付文件的新鲜度核验。上述内容属于AI辅助修订，不能被表述为已经由队员独立完成的人工修改。
+
+\subsection{已执行自动检查的性质}
+自动检查用于发现可计算的不一致，例如能量残差、库存越界、同时充放电、三类费用公式错误、官方预报越权使用、日期缺漏或工作簿聚合差异。具体通过数量、容差和覆盖范围以支撑材料中的验证结果为准。小样例与混合整数求解结果一致，最多支持相应优化模块在该样例下正确，不能直接证明全年策略全局最优。
+
+正文数值和解释还需队员审阅，尤其是安全控制所依赖的10分钟平均监测近似、合同收费解释、未来价格的信息边界、典型日期结论以及各项对照是否公平。自动校验能够支持人工审阅，但不能替代对模型是否符合题意的判断。
+
+\subsection{人工复核状态与本轮差异}
+参赛队已确认上一交付版本的人工核验完成。本次确认只适用于当时的论文、程序和结果，不自动覆盖本轮新增的双模型整合、摘要重写和终审调整。AI另生成\texttt{docs/final\_delta\_review.md}，逐项列明本轮变更、证据位置和待确认内容；记录使用“队员A/B/C”，不填写姓名、学校、赛区或账号。正式提交前仍需针对本轮差异完成：
+\begin{enumerate}
+\item 核验问题二80\%临界分位数推导、48小时计划与即时反馈规则；
+\item 抽查四个指定日期，确认程序结果替换人工近似值；
+\item 核验12情境模型中$G,C,D,E$共享、$X,W$按情境变化的表述；
+\item 确认问题三只与自身“仅0时预报”控制组作2.63\%节费归因；
+\item 核对摘要及正文新增指标均与自动生成宏和结果账本一致；
+\item 逐页检查新论文PDF、更新后的\texttt{result2.xlsx}和最终支撑包。
+\end{enumerate}
+
+\section{责任、匿名与提交前确认}
+参赛队员应对提交作品的原创性、真实性和准确性负责。本文不代签、代填或预先确认本轮差异复核记录；上一版本的已完成核验与本轮待确认范围分别陈述。完成本轮复核后，应保留对AI使用范围的真实描述，不能将用途缩写为仅“语言润色”而隐去建模和编程辅助。
+
+本说明不包含个人姓名、学校、赛区、账号标识或本机绝对路径。向正式支撑包打包时，保留AI工具使用详情、完整程序、题目结果和必要验证文件，移除无关缓存与临时日志；不能删除解释结果来源所必需的资料。最终以竞赛官方AI工具使用规定和参赛队真实复核情况为准。
+\end{document}
