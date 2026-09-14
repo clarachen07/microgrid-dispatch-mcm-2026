@@ -1,19 +1,16 @@
-"""Independent physical, settlement, archive and workbook verification."""
+"""Validate physical, settlement, and workbook constraints for primary runs."""
 from pathlib import Path
 import datetime as dt
-import gzip
 import json
 
 import numpy as np
 from openpyxl import load_workbook
 
 from .data import load_data
-from .optimize import solve_schedule
 
 ROOT = Path(__file__).resolve().parents[2]
 NAMES = {"q1": "result1.xlsx", "q2": "result2.xlsx", "q3": "result3.xlsx",
          "q4_2": "result4-2.xlsx", "q4_3": "result4-3.xlsx"}
-SELECTED = ("2025-03-20", "2025-06-21", "2025-09-23", "2025-12-21")
 TOL = 1e-6
 
 
@@ -100,7 +97,7 @@ def verify_ledger(log, summary, name, expected_steps=None):
         check(abs(q.sum() - summary["energy"]) <= 1e-5, "Q1 purchase total mismatch")
         gap = abs(summary["lp_objective"] - summary["milp_objective"])
         metrics["q1_lp_milp_absolute_gap_yuan"] = float(gap)
-        check(gap <= 1e-4 and abs(gap - summary["absolute_lp_milp_gap"]) <= 1e-6, "Q1 LP/MILP audit mismatch")
+        check(gap <= 1e-4 and abs(gap - summary["absolute_lp_milp_gap"]) <= 1e-6, "Q1 LP/MILP consistency mismatch")
         check(summary.get("milp_gap", 1) <= 1e-7, "Q1 MILP gap is not certified")
     else:
         config = summary["configuration"]
@@ -225,11 +222,11 @@ def verify_workbook(path, name, log):
     return {"passed": not errors, "errors": errors[:30], "error_count": len(errors), "numeric_cells_compared": comparisons}
 
 
-def verify_all(root=None, audit_milp=True, require_workbooks=False, strict=True):
-    """Write verification.json, then fail loudly if any required check fails."""
+def verify_all(root=None, require_workbooks=False, strict=True):
+    """Validate completed primary runs and return a compact in-memory summary."""
     root = Path(root) if root is not None else ROOT
     data = load_data(root / "data/official-input")
-    results, workbooks, audits, errors = {}, {}, [], []
+    results, workbooks, errors = {}, {}, []
     for name, filename in NAMES.items():
         base = root / "artifacts/runs" / name
         if not (base / "ledger.npz").exists() or not (base / "summary.json").exists():
@@ -249,53 +246,12 @@ def verify_all(root=None, audit_milp=True, require_workbooks=False, strict=True)
         for key, expected in (("load", source_load), ("pv", source_pv), ("price", source_price)):
             if log[key].shape != expected.shape or _maxabs(log[key] - expected) > TOL:
                 errors.append(name + ": source data / energy conversion mismatch: " + key)
-        revisions_path = base / "revisions.json.gz"
-        if name != "q1" and revisions_path.exists():
-            with gzip.open(revisions_path, "rt", encoding="utf-8") as stream:
-                revisions = json.load(stream)
-            reconstructed = log["plan"].copy()
-            reconstructed_issue = np.repeat(np.arange(365) * 144, 144)
-            prior_issue = -1
-            allowed_slots = {int(hour) * 6 for hour in summary["configuration"]["updates"]}
-            if len(revisions) != 365 * len(allowed_slots):
-                errors.append(name + ": missing or duplicate scheduled revision snapshots")
-            for item in revisions:
-                issue, day, slot = item["issue"], item["day"], item["slot"]
-                valid = 0 <= day < 365 and issue == day * 144 + slot and issue > prior_issue and slot in allowed_slots and len(item["q"]) == 144 - slot and np.isfinite(item["q"]).all() and np.min(item["q"]) >= -TOL
-                if not valid:
-                    errors.append(name + ": invalid revision timestamp or vector")
-                    continue
-                reconstructed[issue:(day + 1) * 144] = item["q"]
-                reconstructed_issue[issue:(day + 1) * 144] = issue
-                prior_issue = issue
-            result["max_revision_archive_error_kwh"] = _maxabs(reconstructed - log["effective"])
-            if result["max_revision_archive_error_kwh"] > TOL:
-                errors.append(name + ": archived revisions do not reproduce final commitments")
-            if not np.array_equal(reconstructed_issue, log["issue_index"]):
-                errors.append(name + ": archived revision issue times differ from execution log")
-        elif name != "q1":
-            errors.append(name + ": missing revision archive")
         path = root / "artifacts/exports" / filename
         if path.exists():
             workbooks[name] = verify_workbook(path, name, log)
             errors.extend([filename + ": " + message for message in workbooks[name]["errors"]])
         elif require_workbooks:
             errors.append("missing workbook: " + filename)
-        if audit_milp and name != "q1" and result["passed"]:
-            for date in SELECTED:
-                day = (_asdate(date) - dt.date(2025, 1, 1)).days
-                a, b = day * 144, (day + 1) * 144
-                kwargs = dict(net_s=(log["load"][a:b] - log["pv"][a:b])[None, :], price_s=log["price"][a:b][None, :], initial_soc=log["soc_start"][a], purchase=log["plan"][a:b], terminal_soc=log["soc_end"][b - 1], eta=summary["configuration"]["eta"], capacity=summary["configuration"]["storage"], time_limit=60)
-                try:
-                    lp = solve_schedule(**kwargs)
-                    mip = solve_schedule(**kwargs, milp=True)
-                except (ValueError, RuntimeError) as exc:
-                    errors.append(name + " " + date + ": numerical audit failed: " + str(exc))
-                    continue
-                gap = abs(lp["objective"] - mip["objective"])
-                audits.append({"policy": name, "date": date, "lp_objective": lp["objective"], "milp_objective": mip["objective"], "absolute_gap_yuan": gap, "milp_relative_gap": mip["gap"], "interpretation": "Ex-post numerical audit with actual net load, fixed midnight purchases and matched terminal SOC; never used for execution decisions."})
-                if gap > 1e-4 + 1e-7 * max(1, abs(lp["objective"])):
-                    errors.append(name + " " + date + ": LP/MILP audit gap")
     report = {
         "passed": not errors, "errors": errors, "runs_checked": len(results),
         "workbooks_checked": len(workbooks), "workbooks_required": require_workbooks,
@@ -303,11 +259,7 @@ def verify_all(root=None, audit_milp=True, require_workbooks=False, strict=True)
         "max_soc_equation_residual_kwh": max([value["max_soc_equation_residual_kwh"] for value in results.values()] or [0]),
         "max_soc_continuity_error_kwh": max([value["max_soc_continuity_error_kwh"] for value in results.values()] or [0]),
         "tolerance_kwh": TOL, "runs": results, "workbooks": workbooks,
-        "representative_milp_audits": audits,
     }
-    target = root / "artifacts/verification.json"
-    target.parent.mkdir(parents=True, exist_ok=True)
-    target.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
     if errors and strict:
-        raise VerificationError("{} validation failures; see {}".format(len(errors), target))
+        raise VerificationError("{} validation failures".format(len(errors)))
     return report

@@ -71,9 +71,9 @@ def test_current_actual_changes_safety_but_not_pre_interval_optimization(monkeyp
     assert verify_ledger(first, summary, "q2", 144)["passed"]
     tampered = {key: value.copy() for key, value in first.items()}
     tampered["base_fee"][0] += 1.0
-    audit = verify_ledger(tampered, summary, "q2", 144)
-    assert not audit["passed"]
-    assert audit["max_fee_error_yuan"] == 1.0
+    result = verify_ledger(tampered, summary, "q2", 144)
+    assert not result["passed"]
+    assert result["max_fee_error_yuan"] == 1.0
     before = captured[:2]
     captured.clear()
     changed = replace(data, load=data.load.copy())
@@ -171,8 +171,8 @@ def test_quantile_contract_has_48h_terminal_state_and_limits():
 def test_quantile_immediate_feedback_is_physical_and_has_no_revisions():
     data = quantile_test_data(days=2)
     log, summary = simulate_quantile_q2(.8, data=data, end_day=2, verbose=False)
-    audit = verify_ledger(log, summary, "q2", 2 * 144)
-    assert audit["passed"]
+    result = verify_ledger(log, summary, "q2", 2 * 144)
+    assert result["passed"]
     assert summary["configuration"]["feedback"] == "immediate_safe"
     assert summary["configuration"]["control_hours"] == 0
     np.testing.assert_array_equal(log["plan"], log["effective"])

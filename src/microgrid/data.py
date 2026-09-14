@@ -68,23 +68,6 @@ class DataBundle:
     def start_date(self) -> np.datetime64:
         return self.dates[0].astype("datetime64[D]")
 
-    def audit(self) -> dict[str, Any]:
-        return {
-            "days": self.n_days,
-            "start": str(self.dates[0]), "end": str(self.dates[-1]),
-            "steps_per_day": 144, "step_hours": 1 / 6,
-            "input_timestamp_convention": "right endpoint of preceding 10-minute interval",
-            "output_interval_convention": "00:00-00:10 through 23:50-24:00",
-            "template_offset_minutes_corrected": 10,
-            "load_min_kw": float(self.load.min()), "load_max_kw": float(self.load.max()),
-            "pv_min_kw": float(self.pv.min()), "pv_max_kw": float(self.pv.max()),
-            "price_min": float(self.price.min()), "price_max": float(self.price.max()),
-            "load_energy_kwh": float(self.load.sum() / 6),
-            "pv_energy_kwh": float(self.pv.sum() / 6),
-            "output_days": int(np.sum(self.dates >= np.datetime64("2025-02-01"))),
-        }
-
-
 def _rows(path: Path, sheet: str | None = None) -> list[tuple]:
     book = openpyxl.load_workbook(path, read_only=True, data_only=True)
     try:
@@ -150,26 +133,3 @@ def load_data(path: str | Path | None = None) -> DataBundle:
         raise ValueError("输入形状错误或电价非正")
     return DataBundle(dates, arrays[0], arrays[1], arrays[2],
                       prior[:, 1], prior[:, 2], prior[:, 0], predictions, path)
-
-
-def template_manifest(path: str | Path | None = None) -> dict[str, Any]:
-    """Report the original template labels and their documented correction."""
-    result: dict[str, Any] = {
-        "model_intervals": canonical_intervals(),
-        "original_purchase_intervals_shifted_minutes": 10,
-        "correction": "Keep the 144 data positions; label their preceding intervals, beginning at 00:00.",
-        "files": {},
-    }
-    template_dir = _resolve_data_dir(path) / "附件5" if path is None else Path(path)
-    for file in sorted(template_dir.glob("*.xlsx")):
-        book = openpyxl.load_workbook(file, data_only=True)
-        result["files"][file.name] = {
-            sheet.title: {
-                "rows": sheet.max_row, "columns": sheet.max_column,
-                "merged_cells": [str(v) for v in sheet.merged_cells.ranges],
-                "header": [str(cell.value) if cell.value is not None else None for cell in sheet[1]],
-            }
-            for sheet in book
-        }
-        book.close()
-    return result
