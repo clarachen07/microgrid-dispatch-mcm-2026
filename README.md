@@ -1,7 +1,8 @@
 # 微网购电与储能协同调度
 
 > 2026 年全国大学生数学建模竞赛 C 题研究项目  
-> *Microgrid electricity procurement and energy-storage co-dispatch for MCM 2026 Problem C.*
+> *Microgrid electricity procurement and energy-storage co-dispatch for MCM 2026 Problem C.*   
+> 此项目荣获2026全国大学生数学建模竞赛北京二等奖
 
 本项目针对含光伏和储能的微网，建立不确定负载、光伏出力与实时电价下的购电和充放电模型。核心方法包括因果滚动预测、分位数风险裕度和情景滚动优化，覆盖赛题四个问题。
 
